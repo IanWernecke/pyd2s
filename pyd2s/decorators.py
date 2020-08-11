@@ -14,6 +14,7 @@ from functools import wraps
 #   Standard Decorators
 #
 
+
 def args2keywords(function):
     """
     Wrap a function such that is converts given NameSpace objects into keywords.
@@ -21,16 +22,19 @@ def args2keywords(function):
     :param function: the decorated function that requires keywords
     :return: a wrapped function that accepts args
     """
+
     @wraps(function)
     def wrapper(args, **kwargs):
         kwargs.update(**vars(args))
         return function(**kwargs)
+
     return wrapper
 
 
 #
 #   Create Parser Decorators
 #
+
 
 class CreateParserRoot(object):
     """The root CreateParser decorator."""
@@ -41,6 +45,7 @@ class CreateParserRoot(object):
 
     def __call__(self, function):
         """Parse the arguments for the function and pass the result."""
+
         @wraps(function)
         def wrapper(arguments):
 
@@ -74,7 +79,7 @@ class CreateParserCommands(CreateParserRoot):
     def __init__(self, *command_tuples):
         """Add all of the subparsers to the parser."""
         super(CreateParserCommands, self).__init__()
-        subparsers = self.parser.add_subparsers(dest='command')
+        subparsers = self.parser.add_subparsers(dest="command")
         for cmd_name, cmd_help, tuples in command_tuples:
             option = subparsers.add_parser(cmd_name, help=cmd_help)
             for args, kwargs in tuples:
@@ -84,6 +89,7 @@ class CreateParserCommands(CreateParserRoot):
 #
 #   Parse Decorators
 #
+
 
 class ParseRoot(object):
     """Parse the arguments given to the decorated function and pass the resulting NameSpace."""
@@ -95,13 +101,8 @@ class ParseRoot(object):
 
     # Main Decorators require this for verbosity tuple injection
     verbosity_tuple = (
-        ['-v', '--verbosity'],
-        {
-            'action': 'count',
-            'default': 0,
-            'dest': 'verbosity',
-            'help': 'Configure how verbose the logger should be.'
-        }
+        ["-v", "--verbosity"],
+        {"action": "count", "default": 0, "dest": "verbosity", "help": "Configure how verbose the logger should be."},
     )
 
     def __init__(self, *tuples):
@@ -110,6 +111,7 @@ class ParseRoot(object):
 
     def __call__(self, function):
         """Intercept the given arguments and pass them to the parser."""
+
         @self.create_parser(*self.tuples)
         @wraps(function)
         def wrapper(args):
@@ -119,11 +121,9 @@ class ParseRoot(object):
 
                 level = logging.WARNING - (10 * args.verbosity)
                 logging.basicConfig(
-                    format='%(asctime)s [%(levelname)9s] %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=level
+                    format="%(asctime)s [%(levelname)9s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=level
                 )
-                logging.debug('Logging level set to: %d', level)
+                logging.debug("Logging level set to: %d", level)
 
             return function(args)
 
@@ -132,7 +132,7 @@ class ParseRoot(object):
             return wrapper
 
         # return the function if the parent frame is not main
-        if inspect.currentframe().f_back.f_globals['__name__'] != '__main__':
+        if inspect.currentframe().f_back.f_globals["__name__"] != "__main__":
             return wrapper
 
         self.main_actual = True
@@ -161,6 +161,7 @@ class ParseCommands(ParseRoot):
 #
 #   Main Decorators
 #
+
 
 class Main(ParseRoot):
     """Parse and call the decorated function."""
@@ -191,6 +192,7 @@ class MainCommands(ParseRoot):
 #   Logging Class Decorators
 #
 
+
 class LogLevelContainer(object):
     """A class object to hold a logging level, for use when inherited."""
 
@@ -204,12 +206,14 @@ class LogSteps(LogLevelContainer):
 
     def __call__(self, function):
         """Report when a function enters and exits."""
+
         @wraps(function)
         def wrapper(*args, **kwargs):
-            logging.log(self.level, 'Function: %s, Enter', function.__name__)
+            logging.log(self.level, "Function: %s, Enter", function.__name__)
             result = function(*args, **kwargs)
-            logging.log(self.level, 'Function: %s, Exit', function.__name__)
+            logging.log(self.level, "Function: %s, Exit", function.__name__)
             return result
+
         return wrapper
 
 
@@ -218,13 +222,15 @@ class LogArguments(LogLevelContainer):
 
     def __call__(self, function):
         """Log the args and kwargs of the decorated function."""
+
         @wraps(function)
         def wrapper(*args, **kwargs):
             for arg in args:
-                logging.log(self.level, 'Function: %s, Arg: %r', function.__name__, arg)
+                logging.log(self.level, "Function: %s, Arg: %r", function.__name__, arg)
             for k in kwargs:
-                logging.log(self.level, 'Function: %s, Key: %r, Value: %r', function.__name__, k, kwargs[k])
+                logging.log(self.level, "Function: %s, Key: %r, Value: %r", function.__name__, k, kwargs[k])
             return function(*args, **kwargs)
+
         return wrapper
 
 
@@ -233,11 +239,13 @@ class LogResult(LogLevelContainer):
 
     def __call__(self, function):
         """Log the result of a decorated function."""
+
         @wraps(function)
         def wrapper(*args, **kwargs):
             result = function(*args, **kwargs)
-            logging.log(self.level, 'Function: %s, Result: %r', function.__name__, result)
+            logging.log(self.level, "Function: %s, Result: %r", function.__name__, result)
             return result
+
         return wrapper
 
 
@@ -246,12 +254,14 @@ class LogAll(LogLevelContainer):
 
     def __call__(self, function):
         """Wrap a bunch of decorators around the given function so information is logged."""
+
         @LogSteps(self.level)
         @LogArguments(self.level)
         @LogResult(self.level)
         @wraps(function)
         def wrapper(*args, **kwargs):
             return function(*args, **kwargs)
+
         return wrapper
 
 

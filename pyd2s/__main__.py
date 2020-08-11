@@ -18,7 +18,7 @@ from pyd2s.constants import (
     RUNEWORDS,
     STORED_CUBE,
     STORED_INVENTORY,
-    STORED_STASH
+    STORED_STASH,
 )
 from pyd2s.decorators import Main
 from pyd2s.utilities import create_backup, get_backups, get_characters, get_character_save_file, restore_backup
@@ -29,35 +29,34 @@ def display_items(items, title, attribute):
     print(f'{title}\n{"=" * 50}')
     for index, item in enumerate(items):
         if hasattr(item, attribute) and getattr(item, attribute):
-            print(f'  [{index:03}] {item.pretty_name}')
+            print(f"  [{index:03}] {item.pretty_name}")
     print()
 
 
 def parse_item_indexes(raw_string, max_index):
     """Parse desired item indexes from the given string."""
     indexes = []
-    for int_str in raw_string.split(' '):
+    for int_str in raw_string.split(" "):
         if not int_str.isdigit():
-            print(f'Parse integer string is invalid: {int_str}')
+            print(f"Parse integer string is invalid: {int_str}")
             return False, []
         indexes.append(int(int_str))
 
     if not indexes:
-        print(f'The index string was too short: {raw_string}')
+        print(f"The index string was too short: {raw_string}")
         return False, []
 
     if max(indexes) > max_index:
-        print(f'Index {max(indexes)} is too high.')
+        print(f"Index {max(indexes)} is too high.")
         return False, []
 
     return True, indexes
 
 
 class GameCommands(Cmd):
-
     def __init__(self, character):
         """Set up this class object to handle various commands related to handling the saved game."""
-        self.prompt = f'pyd2s>{character}> '
+        self.prompt = f"pyd2s>{character}> "
         super(GameCommands, self).__init__()
 
         self.character = character
@@ -70,7 +69,7 @@ class GameCommands(Cmd):
         print("Attributes:")
         print(f'{"="*20} {"="*20}')
         for key in self.game.attributes.keys():
-            print(f'{key:>20}: {self.game.attributes[key]}')
+            print(f"{key:>20}: {self.game.attributes[key]}")
 
     def do_backup(self, arg):
         """Create a backup for the current character (for use with 'restore')."""
@@ -81,34 +80,30 @@ class GameCommands(Cmd):
         """Close the open save file, prompting if a change has been made."""
         # if the game has been altered, determine whether the file should be written back to disk
         if self.altered:
-            answer = ''
-            while answer not in ('y', 'n'):
+            answer = ""
+            while answer not in ("y", "n"):
                 answer = input("Do you wish to write your changes? (y/n) ").lower().strip()
-                if answer == 'y':
+                if answer == "y":
                     result = self.game.to_file()
-                    print(f'Wrote bytes: {result}')
+                    print(f"Wrote bytes: {result}")
                     self.altered = False
         return 1
 
     def complete_item(self, text, line, begidx, endidx):
         """Return item names that begin with the given text."""
-        return [
-            item.name
-            for item in self.game.items
-            if item.name.startswith(text)
-        ]
+        return [item.name for item in self.game.items if item.name.startswith(text)]
 
     def do_item(self, arg):
         """Show more details about an item in the inventory (int for item by index, str for word match)."""
-        if arg.replace(' ', '').isdigit():
+        if arg.replace(" ", "").isdigit():
             for index in [int(arg_index) for arg_index in arg.split()]:
-                print(f'{self.game.items[index]}\n')
+                print(f"{self.game.items[index]}\n")
             return 0
 
         # attempt to find a word match among the items in the inventory
         for item in self.game.items:
             if arg in item.name:
-                print(f'{item}\n')
+                print(f"{item}\n")
 
     def do_items(self, arg):
         """Display a short listing of the items on the given character."""
@@ -119,7 +114,7 @@ class GameCommands(Cmd):
         stash_items = []
         cube_items = []
         for index, item in enumerate(self.game.items):
-            item_str = f'  [{index:02}] {item.pretty_name}'
+            item_str = f"  [{index:02}] {item.pretty_name}"
             if item.parent == ITEM_STORED:
                 if item.stored == STORED_INVENTORY:
                     inv_items.append(item_str)
@@ -128,27 +123,27 @@ class GameCommands(Cmd):
                 elif item.stored == STORED_CUBE:
                     cube_items.append(item_str)
                 else:
-                    print(f'Item stored? {item_str}, Parent: {item.parent}, Stored: {item.stored}')
+                    print(f"Item stored? {item_str}, Parent: {item.parent}, Stored: {item.stored}")
             elif item.parent == ITEM_EQUIPPED:
                 equipped_items.append(item_str)
             elif item.parent == ITEM_BELT:
                 belt_items.append(item_str)
             else:
-                print(f'What is this? \n{item}')
+                print(f"What is this? \n{item}")
 
         for title, item_strings in [
-                ("Equipped", equipped_items),
-                ("Belt", belt_items),
-                ("Inventory", inv_items),
-                ("Stash", stash_items),
-                ("Cube", cube_items),
+            ("Equipped", equipped_items),
+            ("Belt", belt_items),
+            ("Inventory", inv_items),
+            ("Stash", stash_items),
+            ("Cube", cube_items),
         ]:
             if not item_strings:
                 continue
             print(f'{title}\n{"=" * 50}')
             for item_string in item_strings:
                 print(item_string)
-            print('')
+            print("")
 
     def do_reload(self, arg):
         """Load the save file from disk."""
@@ -166,7 +161,7 @@ class GameCommands(Cmd):
         print(f'Restoring from: "{zip_file}"')
         restore_backup(zip_file)
         self.game.from_file(self.save_file)
-        print('Restored.')
+        print("Restored.")
 
     def do_rm(self, arg):
         """Delete items from the inventory."""
@@ -176,7 +171,7 @@ class GameCommands(Cmd):
 
         with Storage() as store:
             for index in sorted(indexes, reverse=True):
-                print(f'Removing: {self.game.items[index].pretty_name}')
+                print(f"Removing: {self.game.items[index].pretty_name}")
                 self.game.items.pop(index)
                 self.altered = True
 
@@ -188,7 +183,7 @@ class GameCommands(Cmd):
 
         with Storage() as store:
             for index in sorted(indexes, reverse=True):
-                print(f'Storing: {self.game.items[index].pretty_name}')
+                print(f"Storing: {self.game.items[index].pretty_name}")
                 store.append(self.game.items.pop(index))
                 self.altered = True
 
@@ -221,13 +216,13 @@ class GameCommands(Cmd):
     def do_write(self, arg):
         """Write any changes made back to disk."""
         result = self.game.to_file()
-        print(f'Wrote bytes: {result}')
+        print(f"Wrote bytes: {result}")
         self.altered = False
 
 
 class StorageCommands(Cmd):
 
-    prompt = 'pyd2s>storage> '
+    prompt = "pyd2s>storage> "
 
     def __init__(self):
         """Access the storage file to read the storage or give items to a player."""
@@ -239,19 +234,19 @@ class StorageCommands(Cmd):
 
     def do_amulets(self, arg):
         """Display all of the rings in the storage file."""
-        display_items(self.storage, 'Amulets', 'is_amulet')
+        display_items(self.storage, "Amulets", "is_amulet")
 
     def do_armors(self, arg):
         """Display all of the rings in the storage file."""
-        display_items(self.storage, 'Armors', 'is_armor')
+        display_items(self.storage, "Armors", "is_armor")
 
     def do_close(self, arg):
         """Close the storage container and return."""
         if self.altered:
-            answer = ''
-            while answer not in ('y', 'n'):
+            answer = ""
+            while answer not in ("y", "n"):
                 answer = input("Do you wish to write your changes? (y/n) ").lower().strip()
-                if answer == 'y':
+                if answer == "y":
                     result = self.storage.write(self.storage.file_path)
                     print(f'Wrote {result} bytes to file "{self.storage.file_path}"!')
                     self.altered = False
@@ -283,8 +278,7 @@ class StorageCommands(Cmd):
                     # take the higher values (this could work negatively on some negative effects)
                     for parent_prop_value_index in range(len(parent_prop.values)):
                         parent_prop.values[parent_prop_value_index] = max(
-                            parent_prop.values[parent_prop_value_index],
-                            child_prop.values[parent_prop_value_index]
+                            parent_prop.values[parent_prop_value_index], child_prop.values[parent_prop_value_index]
                         )
                     break
 
@@ -307,16 +301,12 @@ class StorageCommands(Cmd):
         # print(f'Indexes: ({begidx}, {endidx})')
 
         # if it is the first argument, return character names
-        if line[:endidx].count(' ') == 1:
-            return [
-                character
-                for character in get_characters()
-                if character.startswith(text)
-            ]
+        if line[:endidx].count(" ") == 1:
+            return [character for character in get_characters() if character.startswith(text)]
 
     def do_gems(self, arg):
         """Display all of the items in the storage container."""
-        display_items(self.storage, 'Gems', 'is_gem')
+        display_items(self.storage, "Gems", "is_gem")
 
         gems = defaultdict(int)
         first_index = dict()
@@ -330,17 +320,17 @@ class StorageCommands(Cmd):
         print(f'Gems: [first index] name (count)\n{"=" * 50}')
         for code in sorted(GEM_CODES):
             if code in gems:
-                print(f'  [{first_index[code]:03}] {MISC_STRINGS[code]} ({gems[code]})')
+                print(f"  [{first_index[code]:03}] {MISC_STRINGS[code]} ({gems[code]})")
         print()
 
     def do_give(self, arg):
         """Give a character an item."""
-        if arg.count(' ') > 1:
+        if arg.count(" ") > 1:
             print(f'Too many arguments: "{arg}"')
             return 0
 
         # get the character name and the item index from the given arguments
-        character, index = arg.split(' ')
+        character, index = arg.split(" ")
         index = int(index)
 
         # ensure the character is good
@@ -350,23 +340,23 @@ class StorageCommands(Cmd):
 
         # ensure the index is good
         if index >= len(self.storage):
-            print(f'Index {index} is too high.')
+            print(f"Index {index} is too high.")
             return 0
 
-        print(f'Giving {character}: {self.storage[index].pretty_name} ...')
+        print(f"Giving {character}: {self.storage[index].pretty_name} ...")
         with Game(character) as game:
-            item  = self.storage.pop(index)
+            item = self.storage.pop(index)
             item.move_to_inventory(0, 0)
             game.items.append(item)
             self.altered = True
-        print('Complete.')
+        print("Complete.")
 
     def do_grep(self, arg):
         """Search the items for a particular trait or attribute."""
         # obtain the text to search for
         text = arg.strip()
         if not text:
-            print('Text required.')
+            print("Text required.")
             return 0
 
         # print out the items where the text appears inside of the item description
@@ -376,12 +366,12 @@ class StorageCommands(Cmd):
                 continue
             item_str = str(item)
             if text in item_str:
-                print(f'  [{index:03}] {item.pretty_name}')
+                print(f"  [{index:03}] {item.pretty_name}")
 
     def do_info(self, arg):
         """Print information about the storage file."""
-        print(f'Storage file location: {self.storage.file_path}')
-        print(f'Storage file contains {len(self.storage)} items.')
+        print(f"Storage file location: {self.storage.file_path}")
+        print(f"Storage file contains {len(self.storage)} items.")
 
     def do_item(self, arg):
         """Display an item in full detail."""
@@ -391,16 +381,16 @@ class StorageCommands(Cmd):
 
         # ensure the given argument is a digit
         if not arg.isdigit():
-            print(f'This command requires a number, not {arg}')
+            print(f"This command requires a number, not {arg}")
             return 0
 
         # convert the string to an integer and ensure it is within range
         index = int(arg)
         if index >= len(self.storage):
-            print(f'Maximum index: {len(self.storage) - 1}')
+            print(f"Maximum index: {len(self.storage) - 1}")
             return 0
 
-        print(f'{self.storage[index]}\n')
+        print(f"{self.storage[index]}\n")
 
     def do_items(self, arg):
         """Display a short listing of the items in the storage."""
@@ -408,19 +398,19 @@ class StorageCommands(Cmd):
         for index, item in enumerate(self.storage):
             if item.is_gem or item.is_rune:
                 continue
-            results[f'{item.name}/{index:003}'] = (index, item)
+            results[f"{item.name}/{index:003}"] = (index, item)
 
         print(f'Items (excluded: gems, runes)\n{"=" * 50}')
         for key in sorted(results.keys()):
             index, item = results[key]
-            print(f'  [{index:03}] {item.pretty_name}')
+            print(f"  [{index:03}] {item.pretty_name}")
         print()
 
     def do_read(self, arg):
         """Read the save file from disk."""
         self.storage = Storage()
         if not os.path.isfile(self.storage.file_path):
-            print(f'Storage file path does not yet exist: {self.storage.file_path}')
+            print(f"Storage file path does not yet exist: {self.storage.file_path}")
             return 0
 
         result = self.storage.read()
@@ -431,7 +421,7 @@ class StorageCommands(Cmd):
         print(f'Rings\n{"=" * 50}')
         for index, item in enumerate(self.storage):
             if item.is_ring:
-                print(f'  [{index:02}] {item.pretty_name}')
+                print(f"  [{index:02}] {item.pretty_name}")
         print()
 
     def do_rm(self, arg):
@@ -441,7 +431,7 @@ class StorageCommands(Cmd):
             return 0
 
         for index in sorted(indexes, reverse=True):
-            print(f'Removing: {self.storage[index].pretty_name}')
+            print(f"Removing: {self.storage[index].pretty_name}")
             self.storage.pop(index)
             self.altered = True
 
@@ -459,7 +449,7 @@ class StorageCommands(Cmd):
         print(f'Runes: [first index] name (count)\n{"=" * 50}')
         for code in sorted(RUNE_CODES):
             if code in runes:
-                print(f'  [{first_index[code]:03}] {MISC_STRINGS[code]} ({runes[code]})')
+                print(f"  [{first_index[code]:03}] {MISC_STRINGS[code]} ({runes[code]})")
         print()
 
     def do_runewords(self, arg):
@@ -494,11 +484,11 @@ class StorageCommands(Cmd):
 
     def do_uniques(self, arg):
         """Display the unique items in the inventory."""
-        display_items(self.storage, 'Uniques', 'is_unique_quality')
+        display_items(self.storage, "Uniques", "is_unique_quality")
 
     def do_weapons(self, arg):
         """Display all of the rings in the storage file."""
-        display_items(self.storage, 'Weapons', 'is_weapon')
+        display_items(self.storage, "Weapons", "is_weapon")
 
     def do_write(self, arg):
         """Write the storage object to the storage file."""
@@ -509,8 +499,8 @@ class StorageCommands(Cmd):
 
 class Commands(Cmd):
 
-    intro = 'Welcome to the python Diablo 2 save file editor. Type help or ? to list comands.\n'
-    prompt = 'pyd2s> '
+    intro = "Welcome to the python Diablo 2 save file editor. Type help or ? to list comands.\n"
+    prompt = "pyd2s> "
 
     def __init__(self):
         super(Commands, self).__init__()
@@ -537,18 +527,14 @@ class Commands(Cmd):
         # print(f'Text: "{text}"')
         # print(f'Line: "{line}"')
         # print(f'Indexes: ({begidx}, {endidx})')
-        return [
-            character
-            for character in self.characters
-            if character.startswith(text)
-        ]
+        return [character for character in self.characters if character.startswith(text)]
 
     def do_open(self, arg):
         """Open a character's save file for editing."""
         if arg not in self.characters:
-            print(f'Characters:')
+            print(f"Characters:")
             for character in self.characters:
-                print(f'  {character}')
+                print(f"  {character}")
             return 0
 
         GameCommands(arg).cmdloop()
