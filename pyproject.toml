@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "pyd2s"
+version = "0.1.0"
+description = "A python module for interacting with Diablo 2 save files."
+authors = ["IanWernecke <IanWernecke@protonmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+numpy = "^1.18.4"
+colored = "^1.4.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.4.3"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
